@@ -1,0 +1,369 @@
+<!DOCTYPE html>  <html lang="en">  
+<head>  
+<meta charset="UTF-8">  
+<meta name="viewport" content="width=device-width, initial-scale=1.0">  
+<title>VUKAHLE PHONE GUARD</title>  <style>  
+* { box-sizing: border-box; }  
+  
+body {  
+  margin: 0;  
+  background: #07111c;  
+  color: white;  
+  font-family: Arial, sans-serif;  
+}  
+  
+header {  
+  padding: 22px;  
+  text-align: center;  
+  background: #0d1d2c;  
+  border-bottom: 2px solid #20e878;  
+}  
+  
+.logo {  
+  font-size: 27px;  
+  font-weight: bold;  
+  color: #20e878;  
+}  
+  
+.container {  
+  max-width: 480px;  
+  margin: 20px auto;  
+  padding: 18px;  
+}  
+  
+.card {  
+  background: #122438;  
+  border: 1px solid #29445b;  
+  border-radius: 15px;  
+  padding: 18px;  
+  margin-bottom: 16px;  
+}  
+  
+h2 { color: #20e878; }  
+  
+button {  
+  width: 100%;  
+  padding: 16px;  
+  margin-top: 12px;  
+  border: none;  
+  border-radius: 10px;  
+  background: #20e878;  
+  color: #07111c;  
+  font-weight: bold;  
+  font-size: 16px;  
+  cursor: pointer;  
+}  
+  
+button.secondary {  
+  background: #29445b;  
+  color: white;  
+}  
+  
+button.danger {  
+  background: #d94a4a;  
+  color: white;  
+}  
+  
+input {  
+  width: 100%;  
+  padding: 13px;  
+  border-radius: 8px;  
+  border: 1px solid #456078;  
+  background: #07111c;  
+  color: white;  
+  margin-top: 10px;  
+}  
+  
+.status {  
+  color: #20e878;  
+  font-weight: bold;  
+}  
+  
+.muted {  
+  color: #aab9c8;  
+  font-size: 14px;  
+  line-height: 1.5;  
+}  
+  
+.hidden { display: none; }  
+  
+.map {  
+  background: #1b3044;  
+  border-radius: 12px;  
+  padding: 25px;  
+  text-align: center;  
+}  
+  
+footer {  
+  text-align: center;  
+  padding: 20px;  
+  color: #8295a8;  
+  font-size: 12px;  
+}  
+</style>  </head>  <body>  <header>  
+  <div class="logo">🛡 VUKAHLE</div>  
+  <div>PHONE GUARD</div>  
+  <small>Device Recovery Platform</small>  
+</header>  <div class="container">  <!-- OWNER SCREEN -->  <section id="ownerScreen">    <div class="card">  
+    <h2>Owner Dashboard</h2>  
+    <p class="status">● Account Active</p>  
+    <p class="muted">Your recovery control centre.</p>  
+  </div>    <div class="card">  
+    <h3>My Devices</h3>  
+    <p>Registered device</p>  
+    <p class="status">Protection ready</p>  
+  </div>    <div class="card">  
+    <h3>Generate Recovery Link</h3>  
+    <p class="muted">  
+      Generate a unique link for a device recovery  
+      session. The recipient must knowingly agree  
+      to share their location.  
+    </p>  <button onclick="generateLink()">  
+  GENERATE UNIQUE LINK  
+</button>  
+
+<div id="linkArea" class="hidden">  
+  <p class="muted">Your unique recovery link:</p>  
+  <input id="recoveryLink" readonly>  
+
+  <button onclick="copyLink()">  
+    COPY LINK  
+  </button>  
+
+  <button class="secondary" onclick="shareLink()">  
+    SHARE LINK  
+  </button>  
+</div>
+
+  </div>    <div class="card">  
+    <h3>Location Dashboard</h3>  
+    <div class="map">  
+      📍  
+      <p id="ownerLocation">No location updates received.</p>  
+    </div>  
+    <p class="muted">  
+      Location updates from another device require  
+      a secure server connection.  
+    </p>  
+  </div>    <div class="card">  
+    <h3>Recovery Session</h3>  
+    <p id="ownerTimer">Waiting for activation</p>  
+    <p class="muted">Duration: Five days</p>  
+  </div>  </section>  <!-- RECIPIENT SCREEN -->  <section id="recipientScreen" class="hidden">    <div class="card" style="text-align:center">  <div style="font-size:45px">🛡</div>  
+
+<h2>Device Connection</h2>  
+
+<p>  
+  Location sharing request  
+</p>  
+
+<p class="muted">  
+  By granting access, you agree to take control of the phone  
+</p>  
+
+<div class="card">  
+  <h3>Recovery Period</h3>  
+  <h2>5 DAYS</h2>  
+  <p id="recipientTimer" class="status">  
+    Session starts when this page opens.  
+  </p>  
+</div>  
+
+<button onclick="startLocation()">  
+  GRANT ACCESS  
+</button>  
+
+<button class="danger" onclick="stopLocation()">  
+  STOP SHARING  
+</button>
+
+  </div>    <div class="card">  
+    <h3>Location Status</h3>  
+    <p id="locationStatus" class="status">  
+      Location not shared.  
+    </p>  <p id="coordinates" class="muted">  
+  Waiting for permission.  
+</p>  
+
+<a id="mapLink" target="_blank"  
+   rel="noopener noreferrer"></a>
+
+  </div>  </section>  </div>  <footer>  
+  VUKAHLE PHONE GUARD © 2026  
+  <br>Secure device recovery prototype  
+</footer>  <script>  
+  
+let watchID = null;  
+let sessionInterval = null;  
+let sessionStart = null;  
+let sessionEnd = null;  
+  
+const params = new URLSearchParams(location.search);  
+const recoveryID = params.get("recovery");  
+  
+if (recoveryID) {  
+  document.getElementById("ownerScreen").classList.add("hidden");  
+  document.getElementById("recipientScreen").classList.remove("hidden");  
+  
+  const key = "vukahle_session_" + recoveryID;  
+  
+  sessionStart = Number(localStorage.getItem(key));  
+  
+  if (!sessionStart) {  
+    sessionStart = Date.now();  
+    localStorage.setItem(key, sessionStart);  
+  }  
+  
+  sessionEnd = sessionStart + (5 * 24 * 60 * 60 * 1000);  
+  
+  updateRecipientTimer();  
+  sessionInterval = setInterval(updateRecipientTimer, 1000);  
+  
+} else {  
+  document.getElementById("ownerScreen").classList.remove("hidden");  
+}  
+  
+  
+function generateLink() {  
+  
+  const id = crypto.randomUUID();  
+  
+  const url = new URL(window.location.href);  
+  url.search = "";  
+  url.searchParams.set("recovery", id);  
+  
+  document.getElementById("recoveryLink").value = url.href;  
+  document.getElementById("linkArea").classList.remove("hidden");  
+  
+}  
+  
+  
+async function copyLink() {  
+  
+  const link = document.getElementById("recoveryLink").value;  
+  
+  try {  
+    await navigator.clipboard.writeText(link);  
+    alert("Recovery link copied!");  
+  } catch {  
+    document.getElementById("recoveryLink").select();  
+    alert("Select and copy the link.");  
+  }  
+  
+}  
+  
+  
+async function shareLink() {  
+  
+  const link = document.getElementById("recoveryLink").value;  
+  
+  if (navigator.share) {  
+    await navigator.share({  
+      title: "VUKAHLE PHONE GUARD",  
+      text: "Device location-sharing request",  
+      url: link  
+    });  
+  } else {  
+    copyLink();  
+  }  
+  
+}  
+  
+  
+function updateRecipientTimer() {  
+  
+  const remaining = sessionEnd - Date.now();  
+  
+  if (remaining <= 0) {  
+    document.getElementById("recipientTimer").textContent =  
+      "Recovery session expired.";  
+  
+    stopLocation();  
+    clearInterval(sessionInterval);  
+    return;  
+  }  
+  
+  const days = Math.floor(remaining / 86400000);  
+  const hours = Math.floor((remaining % 86400000) / 3600000);  
+  const minutes = Math.floor((remaining % 3600000) / 60000);  
+  const seconds = Math.floor((remaining % 60000) / 1000);  
+  
+  document.getElementById("recipientTimer").textContent =  
+    `${days}d ${hours}h ${minutes}m ${seconds}s remaining`;  
+  
+}  
+  
+  
+function startLocation() {  
+  
+  if (!navigator.geolocation) {  
+    alert("GPS location is not supported by this browser.");  
+    return;  
+  }  
+  
+  if (Date.now() >= sessionEnd) {  
+    alert("This recovery session has expired.");  
+    return;  
+  }  
+  
+  if (watchID !== null) return;  
+  
+  document.getElementById("locationStatus").textContent =  
+    "Requesting location permission...";  
+  
+  watchID = navigator.geolocation.watchPosition(  
+  
+    function(position) {  
+  
+      const lat = position.coords.latitude;  
+      const lon = position.coords.longitude;  
+  
+      document.getElementById("locationStatus").textContent =  
+        "Location sharing active";  
+  
+      document.getElementById("coordinates").textContent =  
+        "Latitude: " + lat +  
+        "\nLongitude: " + lon +  
+        "\nAccuracy: " + Math.round(position.coords.accuracy) + " metres";  
+  
+      const map = document.getElementById("mapLink");  
+  
+      map.href = `https://www.google.com/maps?q=${lat},${lon}`;  
+      map.textContent = "OPEN LOCATION IN GOOGLE MAPS";  
+  
+    },  
+  
+    function(error) {  
+  
+      document.getElementById("locationStatus").textContent =  
+        "Location unavailable: " + error.message;  
+  
+      watchID = null;  
+  
+    },  
+  
+    {  
+      enableHighAccuracy: true,  
+      maximumAge: 5000,  
+      timeout: 20000  
+    }  
+  
+  );  
+  
+}  
+  
+  
+function stopLocation() {  
+  
+  if (watchID !== null) {  
+    navigator.geolocation.clearWatch(watchID);  
+    watchID = null;  
+  }  
+  
+  document.getElementById("locationStatus").textContent =  
+    "Location sharing stopped.";  
+  
+}  
+  
+</script>  </body>  
+</html>  
